@@ -1,20 +1,32 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: guestbook-ui
+  name: delayed-restart-deployment
 spec:
   replicas: 1
-  revisionHistoryLimit: 3
   selector:
     matchLabels:
-      app: guestbook-ui
+      app: delayed-restart
   template:
     metadata:
       labels:
-        app: guestbook-ui
+        app: delayed-restart
     spec:
+      terminationGracePeriodSeconds: 300 # Grace period of 5 minutes
       containers:
-      - image: gcr.io/heptio-images/ks-guestbook-demo:0.2
-        name: guestbook-ui
+      - name: delayed-restart-container
+        image: nginx # Replace with your image
         ports:
         - containerPort: 80
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: 80
+          initialDelaySeconds: 300 # Wait 5 minutes before readiness
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 80
+          initialDelaySeconds: 300 # Wait 5 minutes before liveness check
+          periodSeconds: 10
